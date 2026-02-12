@@ -139,6 +139,7 @@ export default function App() {
   };
 
   // UTILS
+  const EXPECTED_IN = "07:00"; // Horário padrão de entrada
   const parseTime = (t) => {
     if (!t) return 0;
     const [h, m] = t.split(":").map(Number);
@@ -150,6 +151,16 @@ export default function App() {
       (parseTime(r.out1) - parseTime(r.in1)) +
       (parseTime(r.out2) - parseTime(r.in2))
     );
+  };
+
+  // CALC ATRASO
+  const calcDelay = (r) => {
+    const expected = parseTime(EXPECTED_IN);
+    const real = parseTime(r.in1);
+
+    if (!real || real <= expected) return 0;
+
+    return real - expected;
   };
 
   // EXTRA (8h48 = 528min)
@@ -272,7 +283,7 @@ export default function App() {
 
       {records.map((r) => (
         <div key={r.id}>
-          {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))}
+          {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))} | Atraso: {formatTime(calcDelay(r))}
         </div>
       ))}
 
@@ -298,7 +309,7 @@ export default function App() {
 
           {allRecords.map((r) => (
             <div key={r.id}>
-              <strong>{r.email}</strong> | {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))}
+              <strong>{r.email}</strong> | {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))} | Atraso: {formatTime(calcDelay(r))} | Atraso: {formatTime(calcDelay(r))}
             </div>
           ))}
         </>
