@@ -155,11 +155,12 @@ export default function App() {
   // CALC EXTRA (acima de 8h = 480min)
   // CALC EXTRA (acima de 8h48 = 528min)
   // CALC EXTRA (acima de 8h48 = 528min)
-  const calcExtra = (r) => {
-    const total = calcDay(r);
-    const normal = 528; // 8h48min = 528 minutos
-    return total > normal ? total - normal : 0;
-  };
+  const formatTime = (min) => {
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+
+  return `${h}h${String(m).padStart(2, "0")}`;
+};
 
   // TOTAL EXTRA DO MÊS (CORRIGIDO)
 const calcMonthExtra = (data) => {
@@ -270,12 +271,13 @@ const calcMonthExtra = (data) => {
       <h3>Meus Registros</h3>
 
       <p>
-        Hora extra do mês: <strong>{(calcMonthExtra(records)/60).toFixed(2)}h</strong>
+        Hora extra do mês: <strong>{formatTime(calcMonthExtra(records))}</strong>
       </p>
 
       {records.map((r) => (
         <div key={r.id}>
-          {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {(calcExtra(r)/60).toFixed(2)}h
+          {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {formatTime(calcExtra(r))}
+
         </div>
       ))}
 
