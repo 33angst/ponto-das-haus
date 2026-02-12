@@ -28,7 +28,7 @@ const firebaseConfig = {
 };
 
 // ADMIN EMAIL (troque se precisar)
-const ADMIN_EMAIL = "erickangst1234@gmail.com";
+const ADMIN_EMAIL = "admin@dashaus.com";
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
@@ -78,27 +78,39 @@ export default function App() {
   const saveRecord = async () => {
     if (!user) return;
 
-    const today = new Date().toISOString().slice(0, 10);
+    if (!in1 || !out1 || !in2 || !out2) {
+      alert("Preencha todos os horários antes de salvar.");
+      return;
+    }
 
-    await addDoc(collection(db, "records"), {
-      uid: user.uid,
-      email: user.email,
-      date: today,
-      in1,
-      out1,
-      in2,
-      out2,
-      created: new Date()
-    });
+    try {
+      const today = new Date().toISOString().slice(0, 10);
 
-    setIn1("");
-    setOut1("");
-    setIn2("");
-    setOut2("");
+      await addDoc(collection(db, "records"), {
+        uid: user.uid,
+        email: user.email,
+        date: today,
+        in1,
+        out1,
+        in2,
+        out2,
+        created: new Date()
+      });
 
-    loadRecords(user.uid);
+      alert("Ponto salvo com sucesso! ✅");
 
-    if (user.email === ADMIN_EMAIL) loadAllRecords();
+      setIn1("");
+      setOut1("");
+      setIn2("");
+      setOut2("");
+
+      loadRecords(user.uid);
+
+      if (user.email === ADMIN_EMAIL) loadAllRecords();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar. Verifique a internet.");
+    }
   };
 
   // LOAD USER RECORDS
@@ -139,6 +151,29 @@ export default function App() {
       (parseTime(r.out2) - parseTime(r.in2))
     );
   };
+
+  // CALC EXTRA (acima de 8h = 480min)
+  // CALC EXTRA (acima de 8h48 = 528min)
+  // CALC EXTRA (acima de 8h48 = 528min)
+  const calcExtra = (r) => {
+    const total = calcDay(r);
+    const normal = 528; // 8h48min = 528 minutos
+    return total > normal ? total - normal : 0;
+  };
+
+  // TOTAL EXTRA DO MÊS (CORRIGIDO)
+const calcMonthExtra = (data) => {
+  const now = new Date();
+  const ym =
+    now.getFullYear() +
+    "-" +
+    String(now.getMonth() + 1).padStart(2, "0");
+
+  return data
+    .filter((r) => r.date.startsWith(ym))
+    .reduce((sum, r) => sum + calcExtra(r), 0);
+};
+
 
   // EXPORT EXCEL
   const exportExcel = (data, name) => {
@@ -234,9 +269,13 @@ export default function App() {
 
       <h3>Meus Registros</h3>
 
+      <p>
+        Hora extra do mês: <strong>{(calcMonthExtra(records)/60).toFixed(2)}h</strong>
+      </p>
+
       {records.map((r) => (
         <div key={r.id}>
-          {r.date} → {(calcDay(r) / 60).toFixed(2)}h
+          {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {(calcExtra(r)/60).toFixed(2)}h
         </div>
       ))}
 
@@ -271,7 +310,7 @@ export default function App() {
               key={r.id}
               style={{ borderBottom: "1px solid #ccc", padding: 5 }}
             >
-              <strong>{r.email}</strong> | {r.date} → {(calcDay(r) / 60).toFixed(2)}h
+              <strong>{r.email}</strong> | {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {(calcExtra(r)/60).toFixed(2)}h
             </div>
           ))}
         </>
