@@ -277,7 +277,6 @@ const calcMonthExtra = (data) => {
       {records.map((r) => (
         <div key={r.id}>
           {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {formatTime(calcExtra(r))}
-
         </div>
       ))}
 
