@@ -190,6 +190,39 @@ export default function App() {
       .reduce((sum, r) => sum + calcExtra(r), 0);
   };
 
+  // MONTH DELAY (ATRASO DO MÊS)
+  const calcMonthDelay = (data) => {
+    const now = new Date();
+    const ym =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0");
+
+    return data
+      .filter((r) => r.date.startsWith(ym))
+      .reduce((sum, r) => sum + calcDelay(r), 0);
+  };
+
+  // EXTRA LÍQUIDO (EXTRA - ATRASO)
+  const calcNetExtra = (data) => {
+    const extra = calcMonthExtra(data);
+    const delay = calcMonthDelay(data);
+
+    const net = extra - delay;
+    return net > 0 ? net : 0;
+  };
+  const calcMonthExtra = (data) => {
+    const now = new Date();
+    const ym =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0");
+
+    return data
+      .filter((r) => r.date.startsWith(ym))
+      .reduce((sum, r) => sum + calcExtra(r), 0);
+  };
+
   // EXPORT EXCEL
   const exportExcel = (data, name) => {
     const sheet = data.map((r) => ({
@@ -278,7 +311,9 @@ export default function App() {
       <h3>Meus Registros</h3>
 
       <p>
-        Hora extra do mês: <strong>{formatTime(calcMonthExtra(records))}</strong>
+        Hora extra do mês: <strong>{formatTime(calcMonthExtra(records))}</strong><br />
+        Atraso do mês: <strong>{formatTime(calcMonthDelay(records))}</strong><br />
+        Serão final: <strong>{formatTime(calcNetExtra(records))}</strong>
       </p>
 
       {records.map((r) => (
