@@ -1,4 +1,3 @@
-// App.jsx
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import {
@@ -17,13 +16,6 @@ import {
   getDocs
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
-
-// Import para gerar PDF
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-
-// Import do novo componente PDF
-import AdminPDF from "./AdminPDF"; // ajuste se estiver em outra pasta
 
 // Firebase config
 const firebaseConfig = {
@@ -219,6 +211,17 @@ export default function App() {
     const net = extra - delay;
     return net > 0 ? net : 0;
   };
+  const calcMonthExtra = (data) => {
+    const now = new Date();
+    const ym =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0");
+
+    return data
+      .filter((r) => r.date.startsWith(ym))
+      .reduce((sum, r) => sum + calcExtra(r), 0);
+  };
 
   // EXPORT EXCEL
   const exportExcel = (data, name) => {
@@ -333,25 +336,15 @@ export default function App() {
 
           <button
             onClick={() => exportExcel(allRecords, "ponto_empresa.xlsx")}
-            style={{ marginTop: 10, padding: "8px 16px" }}
           >
-            Exportar Geral Excel
+            Exportar Geral
           </button>
-
-          {/* Componente AdminPDF para gerar PDF por mês */}
-          <AdminPDF
-            allRecords={allRecords}
-            calcDay={calcDay}
-            calcExtra={calcExtra}
-            calcDelay={calcDelay}
-            formatTime={formatTime}
-          />
 
           <hr />
 
           {allRecords.map((r) => (
             <div key={r.id}>
-              <strong>{r.email}</strong> | {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))} | Atraso: {formatTime(calcDelay(r))}
+              <strong>{r.email}</strong> | {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))} | Atraso: {formatTime(calcDelay(r))} | Atraso: {formatTime(calcDelay(r))}
             </div>
           ))}
         </>
