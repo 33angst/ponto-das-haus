@@ -27,8 +27,8 @@ const firebaseConfig = {
   appId: "1:834005685410:web:230bef03092a4c2b9b73fb"
 };
 
-// ADMIN EMAIL (troque se precisar)
-const ADMIN_EMAIL = "admin@dashaus.com";
+// ADMIN
+const ADMIN_EMAIL = "erickangst1234@gmail.com";
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
@@ -79,7 +79,7 @@ export default function App() {
     if (!user) return;
 
     if (!in1 || !out1 || !in2 || !out2) {
-      alert("Preencha todos os horários antes de salvar.");
+      alert("Preencha todos os horários");
       return;
     }
 
@@ -97,7 +97,7 @@ export default function App() {
         created: new Date()
       });
 
-      alert("Ponto salvo com sucesso! ✅");
+      alert("Ponto salvo! ✅");
 
       setIn1("");
       setOut1("");
@@ -105,11 +105,11 @@ export default function App() {
       setOut2("");
 
       loadRecords(user.uid);
-
       if (user.email === ADMIN_EMAIL) loadAllRecords();
+
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar. Verifique a internet.");
+      alert("Erro ao salvar. Verifique internet.");
     }
   };
 
@@ -152,49 +152,32 @@ export default function App() {
     );
   };
 
-  // CALC EXTRA (acima de 8h = 480min)
-  // CALC EXTRA (acima de 8h48 = 528min)
-  // CALC EXTRA (8h48 = 528min)
-const calcExtra = (r) => {
-  const total = calcDay(r);
-  const normal = 528;
-  return total > normal ? total - normal : 0;
-};
+  // EXTRA (8h48 = 528min)
+  const calcExtra = (r) => {
+    const total = calcDay(r);
+    const normal = 528;
+    return total > normal ? total - normal : 0;
+  };
 
-// CONVERTE MINUTOS PARA H:MM
-const formatTime = (min) => {
-  const h = Math.floor(min / 60);
-  const m = Math.round(min % 60);
+  // FORMAT MINUTES
+  const formatTime = (min) => {
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    return `${h}h${String(m).padStart(2, "0")}`;
+  };
 
-  return `${h}h${String(m).padStart(2, "0")}`;
-};
+  // MONTH EXTRA
+  const calcMonthExtra = (data) => {
+    const now = new Date();
+    const ym =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0");
 
-// TOTAL EXTRA DO MÊS
-const calcMonthExtra = (data) => {
-  const now = new Date();
-  const ym =
-    now.getFullYear() +
-    "-" +
-    String(now.getMonth() + 1).padStart(2, "0");
-
-  return data
-    .filter((r) => r.date.startsWith(ym))
-    .reduce((sum, r) => sum + calcExtra(r), 0);
-};
-
-  // TOTAL EXTRA DO MÊS (CORRIGIDO)
-const calcMonthExtra = (data) => {
-  const now = new Date();
-  const ym =
-    now.getFullYear() +
-    "-" +
-    String(now.getMonth() + 1).padStart(2, "0");
-
-  return data
-    .filter((r) => r.date.startsWith(ym))
-    .reduce((sum, r) => sum + calcExtra(r), 0);
-};
-
+    return data
+      .filter((r) => r.date.startsWith(ym))
+      .reduce((sum, r) => sum + calcExtra(r), 0);
+  };
 
   // EXPORT EXCEL
   const exportExcel = (data, name) => {
@@ -205,7 +188,8 @@ const calcMonthExtra = (data) => {
       Saida1: r.out1,
       Entrada2: r.in2,
       Saida2: r.out2,
-      TotalHoras: (calcDay(r) / 60).toFixed(2)
+      Total: formatTime(calcDay(r)),
+      Extra: formatTime(calcExtra(r))
     }));
 
     const ws = XLSX.utils.json_to_sheet(sheet);
@@ -220,8 +204,8 @@ const calcMonthExtra = (data) => {
   // LOGIN
   if (!user) {
     return (
-      <div style={{ padding: 30, fontFamily: "Arial" }}>
-        <h2>Ponto Das Haus Marcenaria</h2>
+      <div style={{ padding: 30 }}>
+        <h2>Ponto Das Haus</h2>
 
         <input
           placeholder="Email"
@@ -250,11 +234,11 @@ const calcMonthExtra = (data) => {
 
   const isAdmin = user.email === ADMIN_EMAIL;
 
-  // SISTEMA
+  // APP
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      <h2>Ponto Das Haus Marcenaria</h2>
-      <p>Usuário: {user.email}</p>
+    <div style={{ padding: 20 }}>
+      <h2>Ponto Das Haus</h2>
+      <p>{user.email}</p>
 
       {isAdmin && <p style={{ color: "green" }}>Administrador</p>}
 
@@ -264,24 +248,16 @@ const calcMonthExtra = (data) => {
 
       <h3>Bater Ponto</h3>
 
-      <input type="time" value={in1} onChange={(e) => setIn1(e.target.value)} />
-      Entrada 1
-
+      <input type="time" value={in1} onChange={(e) => setIn1(e.target.value)} /> Entrada 1
       <br /><br />
 
-      <input type="time" value={out1} onChange={(e) => setOut1(e.target.value)} />
-      Saída 1
-
+      <input type="time" value={out1} onChange={(e) => setOut1(e.target.value)} /> Saída 1
       <br /><br />
 
-      <input type="time" value={in2} onChange={(e) => setIn2(e.target.value)} />
-      Entrada 2
-
+      <input type="time" value={in2} onChange={(e) => setIn2(e.target.value)} /> Entrada 2
       <br /><br />
 
-      <input type="time" value={out2} onChange={(e) => setOut2(e.target.value)} />
-      Saída 2
-
+      <input type="time" value={out2} onChange={(e) => setOut2(e.target.value)} /> Saída 2
       <br /><br />
 
       <button onClick={saveRecord}>Salvar Ponto</button>
@@ -296,7 +272,7 @@ const calcMonthExtra = (data) => {
 
       {records.map((r) => (
         <div key={r.id}>
-          {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {formatTime(calcExtra(r))}
+          {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))}
         </div>
       ))}
 
@@ -306,32 +282,23 @@ const calcMonthExtra = (data) => {
         Exportar Meu Excel
       </button>
 
-      {/* ADMIN PANEL */}
       {isAdmin && (
         <>
           <hr />
 
-          <h2>Painel do Administrador</h2>
-
-          <p>Total de registros: {allRecords.length}</p>
+          <h2>Painel Admin</h2>
 
           <button
-            onClick={() => exportExcel(allRecords, "ponto_geral_empresa.xlsx")}
-            style={{ background: "#4CAF50", color: "white", padding: 10 }}
+            onClick={() => exportExcel(allRecords, "ponto_empresa.xlsx")}
           >
-            Exportar Excel Geral
+            Exportar Geral
           </button>
 
           <hr />
 
-          <h3>Todos os Funcionários</h3>
-
           {allRecords.map((r) => (
-            <div
-              key={r.id}
-              style={{ borderBottom: "1px solid #ccc", padding: 5 }}
-            >
-              <strong>{r.email}</strong> | {r.date} → {(calcDay(r)/60).toFixed(2)}h | Extra: {(calcExtra(r)/60).toFixed(2)}h
+            <div key={r.id}>
+              <strong>{r.email}</strong> | {r.date} → {formatTime(calcDay(r))} | Extra: {formatTime(calcExtra(r))}
             </div>
           ))}
         </>
