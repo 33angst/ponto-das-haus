@@ -27,6 +27,9 @@ const firebaseConfig = {
   appId: "1:834005685410:web:230bef03092a4c2b9b73fb"
 };
 
+// ADMIN EMAIL (troque se precisar)
+const ADMIN_EMAIL = "erickangst1234@gmail.com";
+
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -39,6 +42,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const [records, setRecords] = useState([]);
+  const [allRecords, setAllRecords] = useState([]);
+
   const [in1, setIn1] = useState("");
   const [out1, setOut1] = useState("");
   const [in2, setIn2] = useState("");
@@ -48,10 +53,15 @@ export default function App() {
     onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
-      if (u) loadRecords(u.uid);
+
+      if (u) {
+        loadRecords(u.uid);
+        if (u.email === ADMIN_EMAIL) loadAllRecords();
+      }
     });
   }, []);
 
+  // AUTH
   const login = async () => {
     await signInWithEmailAndPassword(auth, email, password);
   };
@@ -64,6 +74,7 @@ export default function App() {
     await signOut(auth);
   };
 
+  // SAVE POINT
   const saveRecord = async () => {
     if (!user) return;
 
@@ -86,8 +97,11 @@ export default function App() {
     setOut2("");
 
     loadRecords(user.uid);
+
+    if (user.email === ADMIN_EMAIL) loadAllRecords();
   };
 
+  // LOAD USER RECORDS
   const loadRecords = async (uid) => {
     const q = query(collection(db, "records"), where("uid", "==", uid));
     const snap = await getDocs(q);
@@ -100,6 +114,19 @@ export default function App() {
     setRecords(data);
   };
 
+  // LOAD ALL (ADMIN)
+  const loadAllRecords = async () => {
+    const snap = await getDocs(collection(db, "records"));
+
+    const data = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    setAllRecords(data);
+  };
+
+  // UTILS
   const parseTime = (t) => {
     if (!t) return 0;
     const [h, m] = t.split(":").map(Number);
@@ -113,8 +140,10 @@ export default function App() {
     );
   };
 
-  const exportExcel = () => {
-    const data = records.map((r) => ({
+  // EXPORT EXCEL
+  const exportExcel = (data, name) => {
+    const sheet = data.map((r) => ({
+      Email: r.email,
       Data: r.date,
       Entrada1: r.in1,
       Saida1: r.out1,
@@ -123,10 +152,11 @@ export default function App() {
       TotalHoras: (calcDay(r) / 60).toFixed(2)
     }));
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(sheet);
     const wb = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(wb, ws, "Ponto");
-    XLSX.writeFile(wb, "ponto_das_haus.xlsx");
+    XLSX.writeFile(wb, name);
   };
 
   if (loading) return <p>Carregando...</p>;
@@ -162,11 +192,15 @@ export default function App() {
     );
   }
 
+  const isAdmin = user.email === ADMIN_EMAIL;
+
   // SISTEMA
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
       <h2>Ponto Das Haus Marcenaria</h2>
       <p>Usuário: {user.email}</p>
+
+      {isAdmin && <p style={{ color: "green" }}>Administrador</p>}
 
       <button onClick={logout}>Sair</button>
 
@@ -198,7 +232,7 @@ export default function App() {
 
       <hr />
 
-      <h3>Registros</h3>
+      <h3>Meus Registros</h3>
 
       {records.map((r) => (
         <div key={r.id}>
@@ -208,7 +242,40 @@ export default function App() {
 
       <br />
 
-      <button onClick={exportExcel}>Exportar Excel</button>
+      <button onClick={() => exportExcel(records, "meu_ponto.xlsx")}>
+        Exportar Meu Excel
+      </button>
+
+      {/* ADMIN PANEL */}
+      {isAdmin && (
+        <>
+          <hr />
+
+          <h2>Painel do Administrador</h2>
+
+          <p>Total de registros: {allRecords.length}</p>
+
+          <button
+            onClick={() => exportExcel(allRecords, "ponto_geral_empresa.xlsx")}
+            style={{ background: "#4CAF50", color: "white", padding: 10 }}
+          >
+            Exportar Excel Geral
+          </button>
+
+          <hr />
+
+          <h3>Todos os Funcionários</h3>
+
+          {allRecords.map((r) => (
+            <div
+              key={r.id}
+              style={{ borderBottom: "1px solid #ccc", padding: 5 }}
+            >
+              <strong>{r.email}</strong> | {r.date} → {(calcDay(r) / 60).toFixed(2)}h
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
