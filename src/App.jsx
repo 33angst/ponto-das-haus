@@ -154,12 +154,32 @@ export default function App() {
 
   // CALC EXTRA (acima de 8h = 480min)
   // CALC EXTRA (acima de 8h48 = 528min)
-  // CALC EXTRA (acima de 8h48 = 528min)
-  const formatTime = (min) => {
+  // CALC EXTRA (8h48 = 528min)
+const calcExtra = (r) => {
+  const total = calcDay(r);
+  const normal = 528;
+  return total > normal ? total - normal : 0;
+};
+
+// CONVERTE MINUTOS PARA H:MM
+const formatTime = (min) => {
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);
 
   return `${h}h${String(m).padStart(2, "0")}`;
+};
+
+// TOTAL EXTRA DO MÊS
+const calcMonthExtra = (data) => {
+  const now = new Date();
+  const ym =
+    now.getFullYear() +
+    "-" +
+    String(now.getMonth() + 1).padStart(2, "0");
+
+  return data
+    .filter((r) => r.date.startsWith(ym))
+    .reduce((sum, r) => sum + calcExtra(r), 0);
 };
 
   // TOTAL EXTRA DO MÊS (CORRIGIDO)
